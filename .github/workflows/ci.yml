@@ -2,7 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
+  # pull_request: # Optional: you might want to run it on PRs to main as well
+  #   branches: [ main ]
 
 jobs:
   build:
@@ -22,8 +24,88 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm' # Cache npm dependencies
 
+    - name: Debug - Before Clean-up
+      run: |
+        echo "Current directory (before clean-up):"
+        pwd
+        echo "Listing all files (before clean-up):"
+        ls -la
+
+    - name: Clean node_modules and package-lock.json
+      run: |
+        rm -rf node_modules
+        rm -f package-lock.json
+
+    - name: Debug - After Clean-up
+      run: |
+        echo "Current directory (after clean-up):"
+        pwd
+        echo "Listing all files (after clean-up):"
+        ls -la
+
+    - name: Output package files
+      run: |
+        echo "--- package.json ---"
+        cat package.json
+        echo "--- package-lock.json (if exists) ---"
+        cat package-lock.json || echo "package-lock.json not found"
+
+    - name: Debug - Before Install
+      run: |
+        echo "Current directory (before install):"
+        pwd
+        echo "Listing all files (before install):"
+        ls -la
+
+    - name: Check NODE_PATH (before install)
+      run: |
+        echo "NODE_PATH is: $NODE_PATH"
+        # unset NODE_PATH # Optionally unset if issues persist
+
     - name: Install dependencies
-      run: npm ci # 'npm ci' is generally recommended for CI for faster, reliable builds
+      run: npm install --verbose 
+
+    - name: Debug - After Install
+      run: |
+        echo "Current directory (after install):"
+        pwd
+        echo "Listing all files (after install):"
+        ls -la
+        echo "Listing root of node_modules (after install):"
+        ls -la node_modules || echo "node_modules not found or empty"
+
+    - name: List node_modules and check key dependencies
+      run: |
+        echo "Checking for axios..."
+        ls -l node_modules/axios || echo "axios not found in node_modules/axios"
+        echo "Deep listing for axios..."
+        ls -la node_modules/axios || true # Show more details or error
+        echo "Checking for jest..."
+        ls -l node_modules/jest || echo "jest not found in node_modules/jest"
+        echo "Checking for babel-jest..."
+        ls -l node_modules/babel-jest || echo "babel-jest not found in node_modules/babel-jest"
+        echo "Checking for @babel/core..."
+        ls -l node_modules/@babel/core || echo "@babel/core not found in node_modules/@babel/core"
+
+    - name: Check NODE_PATH (before test)
+      run: |
+        echo "NODE_PATH is: $NODE_PATH"
+        # unset NODE_PATH # Optionally unset if issues persist
+
+    - name: Log versions
+      run: |
+        node -v
+        npm -v
+        npx jest --version
+
+    - name: Debug - Before Test
+      run: |
+        echo "Current directory (before test):"
+        pwd
+        echo "Listing all files (before test):"
+        ls -la
+        echo "Listing node_modules (before test):"
+        ls -la node_modules || echo "node_modules not found or empty before test"
 
     - name: Run tests
       run: npm test
