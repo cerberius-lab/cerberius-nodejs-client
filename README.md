@@ -1,3 +1,5 @@
+[![Node.js CI](https://github.com/cerberius-soft/nodejs/actions/workflows/ci.yml/badge.svg)](https://github.com/cerberius-soft/nodejs/actions/workflows/ci.yml)
+
 # Cerberius API Client for Node.js
 
 A Node.js client library for interacting with the Cerberius API. This package provides a convenient way to access Cerberius services for email lookups, IP lookups, and prompt checking.
@@ -17,7 +19,7 @@ To use the Cerberius API, you need an API Key and an API Secret.
 
 ### Obtaining Credentials
 
-You can obtain your API Key and API Secret from your Cerberius account dashboard. Please refer to the official Cerberius API documentation (e.g., at `https://service.cerberius.com/api/docs` - this link is a placeholder) for more details on managing your API credentials.
+You can obtain your API Key and API Secret from your Cerberius account dashboard. Please refer to the official Cerberius API (e.g., at `https://cerberius.com/api/docs/`) for more details on managing your API credentials.
 
 ### Instantiating the Client
 

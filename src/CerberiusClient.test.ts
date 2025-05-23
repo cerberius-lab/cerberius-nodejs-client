@@ -2,16 +2,44 @@ import { CerberiusClient } from './CerberiusClient';
 import axios from 'axios';
 import * as crypto from 'crypto';
 
-jest.mock('axios');
+// Define shared mock instances for Hmac methods
+const mockHmacUpdate = jest.fn().mockReturnThis();
+const mockHmacDigest = jest.fn(() => 'mocked_signature');
+
+// Mock axios selectively
+const mockAxiosInstancePost = jest.fn();
+jest.mock('axios', () => {
+    // Get the actual axios module to access its isAxiosError function INSIDE the factory
+    const actualAxios = jest.requireActual('axios'); 
+    return {
+        __esModule: true, // This is important for ES modules
+        default: {
+            create: jest.fn(() => ({
+                post: mockAxiosInstancePost, // The instance created will have this mock post
+                // Add other methods like get, put, delete if your client uses them
+            })),
+            isAxiosError: actualAxios.isAxiosError,
+            // Mock other static methods of axios if CerberiusClient uses them directly e.g. axios.post()
+            // post: jest.fn(),
+        },
+        // Also export isAxiosError directly if it's imported like: import { isAxiosError } from 'axios'
+        isAxiosError: actualAxios.isAxiosError,
+    };
+});
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
 // Mock crypto for consistent signature generation
-jest.mock('crypto', () => ({
-    ...jest.requireActual('crypto'), // import and retain default behavior
-    createHmac: jest.fn(() => ({
-        update: jest.fn().mockReturnThis(),
-        digest: jest.fn(() => 'mocked_signature'),
-    })),
-}));
+jest.mock('crypto', () => {
+    const originalCrypto = jest.requireActual('crypto'); // Get the actual module
+    return {
+        ...originalCrypto, // Spread original exports
+        createHmac: jest.fn((_algorithm: string, _key: crypto.BinaryLike | crypto.KeyObject) => ({
+            update: mockHmacUpdate,
+            digest: mockHmacDigest,
+        })),
+    };
+});
 
 
 describe('CerberiusClient', () => {
@@ -21,12 +49,12 @@ describe('CerberiusClient', () => {
 
     beforeEach(() => {
         client = new CerberiusClient(apiKey, apiSecret);
-        // Reset mocks before each test
-        mockedAxios.create.mockReturnThis(); // Ensure create returns the mocked instance
-        mockedAxios.post.mockReset();
+        // Reset the mock for the httpClient.post method before each test
+        mockAxiosInstancePost.mockReset(); 
+        // Clear mocks for crypto
         (crypto.createHmac as jest.Mock).mockClear();
-        (crypto.createHmac().update as jest.Mock).mockClear();
-        (crypto.createHmac().digest as jest.Mock).mockClear();
+        mockHmacUpdate.mockClear();
+        mockHmacDigest.mockClear();
     });
 
     describe('_generateAuthHeaders', () => {
@@ -44,8 +72,8 @@ describe('CerberiusClient', () => {
 
             const expectedDataToSign = mockTimestamp.toString() + apiKey;
             expect(crypto.createHmac).toHaveBeenCalledWith('sha256', apiSecret);
-            expect(crypto.createHmac().update).toHaveBeenCalledWith(expectedDataToSign);
-            expect(crypto.createHmac().digest).toHaveBeenCalledWith('hex');
+            expect(mockHmacUpdate).toHaveBeenCalledWith(expectedDataToSign); // Assert on the stable update mock
+            expect(mockHmacDigest).toHaveBeenCalledWith('hex'); // Assert on the stable digest mock
 
             global.Date.now = RealDate; // Restore original Date.now
         });
@@ -54,10 +82,19 @@ describe('CerberiusClient', () => {
     describe('API methods', () => {
         const mockApiSuccessResponse = { data: { success: true } };
         const mockApiErrorResponse = {
+            isAxiosError: true, // Ensures axios.isAxiosError(error) is true
             response: {
                 status: 500,
                 data: { message: 'Internal Server Error' },
+                headers: {}, // Standard for Axios error response
+                statusText: 'Internal Server Error', // Standard for Axios error response
+                config: {} as any, // Standard for Axios error response, cast to any for simplicity
             },
+            message: 'Request failed with status code 500', // Generic message for the error itself
+            name: 'AxiosError',
+            code: 'ERR_BAD_REQUEST', // Example error code
+            config: {} as any, // Standard for Axios error, cast to any for simplicity
+            toJSON: () => ({}), // Standard for Axios error
         };
         const mockEmails = ['test1@example.com', 'test2@example.com'];
         const mockIps = ['1.2.3.4', '5.6.7.8'];
@@ -70,7 +107,6 @@ describe('CerberiusClient', () => {
             payload: any,
             payloadKey: string
         ) => {
-            // Mock _generateAuthHeaders to ensure it's called and to simplify header checks
             const mockAuthHeaders = {
                 'X-API-Key': apiKey,
                 'X-Timestamp': 'mocked_timestamp',
@@ -79,12 +115,12 @@ describe('CerberiusClient', () => {
             const generateAuthHeadersSpy = jest.spyOn(CerberiusClient.prototype as any, '_generateAuthHeaders')
                 .mockReturnValue(mockAuthHeaders);
 
-            mockedAxios.post.mockResolvedValue(mockApiSuccessResponse);
+            mockAxiosInstancePost.mockResolvedValue(mockApiSuccessResponse);
 
             const response = await (client as any)[methodName](payload);
 
             expect(generateAuthHeadersSpy).toHaveBeenCalledTimes(1);
-            expect(mockedAxios.post).toHaveBeenCalledWith(
+            expect(mockAxiosInstancePost).toHaveBeenCalledWith(
                 endpoint,
                 { [payloadKey]: payload },
                 { headers: mockAuthHeaders }
@@ -106,7 +142,7 @@ describe('CerberiusClient', () => {
              const generateAuthHeadersSpy = jest.spyOn(CerberiusClient.prototype as any, '_generateAuthHeaders')
                 .mockReturnValue(mockAuthHeaders);
 
-            mockedAxios.post.mockRejectedValue(mockApiErrorResponse);
+            mockAxiosInstancePost.mockRejectedValue(mockApiErrorResponse);
 
             await expect((client as any)[methodName](payload)).rejects.toThrow(
                 `API Error: ${mockApiErrorResponse.response.status} ${mockApiErrorResponse.response.data}`
@@ -145,8 +181,9 @@ describe('CerberiusClient', () => {
 
         it('should throw a generic error if axios error is not standard', async () => {
             const genericError = new Error("Network Error");
-            mockedAxios.post.mockRejectedValue(genericError);
-             const generateAuthHeadersSpy = jest.spyOn(CerberiusClient.prototype as any, '_generateAuthHeaders')
+            mockAxiosInstancePost.mockRejectedValue(genericError);
+            
+            const generateAuthHeadersSpy = jest.spyOn(CerberiusClient.prototype as any, '_generateAuthHeaders')
                 .mockReturnValue({}); // Mock headers
 
             await expect(client.emailLookup(mockEmails)).rejects.toThrow("Network Error");
