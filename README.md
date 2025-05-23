@@ -4,71 +4,97 @@
 
 A Node.js client library for interacting with the Cerberius API. This package provides a convenient way to access Cerberius services for email lookups, IP lookups, and prompt checking.
 
+## Table of Contents
+
+*   [Installation](#installation)
+*   [Getting Started](#getting-started)
+    *   [Prerequisites](#prerequisites)
+    *   [Initializing the Client](#initializing-the-client)
+*   [Usage Examples](#usage-examples)
+    *   [Email Lookup](#email-lookup)
+    *   [IP Lookup](#ip-lookup)
+    *   [Prompt Check](#prompt-check)
+*   [API Reference](#api-reference)
+*   [Error Handling](#error-handling)
+*   [Contributing](#contributing)
+*   [License](#license)
+
 ## Installation
 
-To install the Cerberius API Client, use npm:
+Install the package using npm:
 
 ```bash
-npm install cerberius-api-client
+npm install cerberius-client
 ```
-*(Note: This package name `cerberius-api-client` is a placeholder for when it's published to npm. For local development, you would use it directly from your project structure.)*
 
-## Authentication
+## Getting Started
 
-To use the Cerberius API, you need an API Key and an API Secret.
+### Prerequisites
 
-### Obtaining Credentials
+To use the Cerberius API Client, you need an API Key and an API Secret. These credentials are used to authenticate your requests to the Cerberius API.
 
-You can obtain your API Key and API Secret from your Cerberius account dashboard. Please refer to the official Cerberius API (e.g., at `https://cerberius.com/api/docs/`) for more details on managing your API credentials.
+You can obtain your API Key and API Secret from your Cerberius account dashboard. For more details on managing your API credentials, please refer to the official Cerberius API documentation.
+**(TODO: Replace this with the actual URL to your API documentation, e.g., `https://service.cerberius.com/api/docs/`)**
 
-### Instantiating the Client
+### Initializing the Client
 
-Once you have your credentials, you can instantiate the `CerberiusClient`:
+Once you have your API Key and API Secret, import the `CerberiusClient` and create a new instance:
 
-```typescript
-import { CerberiusClient } from 'cerberius-api-client'; // Or your local path e.g., './src/CerberiusClient' for local use
+```javascript
+// For CommonJS (require)
+const { CerberiusClient } = require('cerberius-client');
 
-const apiKey = 'YOUR_API_KEY';
-const apiSecret = 'YOUR_API_SECRET';
+// Or for ES Modules (import), if your project is set up for it:
+// import { CerberiusClient } from 'cerberius-client';
+
+const apiKey = 'YOUR_API_KEY'; // Replace with your actual Cerberius API Key
+const apiSecret = 'YOUR_API_SECRET'; // Replace with your actual Cerberius API Secret
+
+if (apiKey === 'YOUR_API_KEY' || apiSecret === 'YOUR_API_SECRET') {
+    console.warn("Warning: Initialize the CerberiusClient with your actual API Key and API Secret for it to function correctly.");
+}
 
 const client = new CerberiusClient(apiKey, apiSecret);
 ```
+**Note:** The client automatically generates the necessary authentication headers (`X-API-Key`, `X-Timestamp`, `X-Signature`) for each request.
 
-## Usage
+## Usage Examples
 
-The client generates the necessary authentication headers (`X-API-Key`, `X-Timestamp`, `X-Signature`) automatically for each request. The signature is an HMAC-SHA256 hash of (`timestamp + apiKey`) using your `apiSecret`.
+Here's how you can use the client to interact with the Cerberius API. All methods return a Promise.
 
-### `emailLookup(emails: string[])`
+### Email Lookup
 
 Performs a lookup for one or more email addresses.
 
-```typescript
+```javascript
 async function checkEmails() {
     try {
         const emailsToLookup = ['test@example.com', 'another@example.org'];
         const results = await client.emailLookup(emailsToLookup);
         console.log('Email Lookup Results:', results);
-        // Process results based on the actual API response structure
+        // TODO: Describe the expected structure of 'results' here,
+        // or link to your API documentation for the emailLookup response schema.
+        // Example: console.log(results[0].status);
     } catch (error) {
         console.error('Error during email lookup:', error.message);
-        // Handle error, e.g., by checking error.response if it's an API error from axios
     }
 }
 
 checkEmails();
 ```
 
-### `ipLookup(ips: string[])`
+### IP Lookup
 
 Performs a lookup for one or more IP addresses.
 
-```typescript
+```javascript
 async function checkIps() {
     try {
         const ipsToLookup = ['1.2.3.4', '8.8.8.8'];
         const results = await client.ipLookup(ipsToLookup);
         console.log('IP Lookup Results:', results);
-        // Process results
+        // TODO: Describe the expected structure of 'results' here,
+        // or link to your API documentation for the ipLookup response schema.
     } catch (error) {
         console.error('Error during IP lookup:', error.message);
     }
@@ -77,17 +103,18 @@ async function checkIps() {
 checkIps();
 ```
 
-### `promptCheck(prompt: string)`
+### Prompt Check
 
-Checks a given text prompt for potential risks or policy violations.
+Checks a given text prompt.
 
-```typescript
+```javascript
 async function checkUserPrompt() {
     try {
         const promptText = "Is this a legitimate login page: example.com/login";
         const result = await client.promptCheck(promptText);
         console.log('Prompt Check Result:', result);
-        // Process result
+        // TODO: Describe the expected structure of 'result' here,
+        // or link to your API documentation for the promptCheck response schema.
     } catch (error) {
         console.error('Error during prompt check:', error.message);
     }
@@ -98,40 +125,47 @@ checkUserPrompt();
 
 ## API Reference
 
-### `CerberiusClient(apiKey: string, apiSecret: string)`
+This library is written in TypeScript and includes type definitions for a better development experience. API methods return a `Promise`.
+
+**(TODO: It is highly recommended to link to your official Cerberius API documentation for detailed request and response schemas.)**
+
+### `new CerberiusClient(apiKey: string, apiSecret: string)`
 Constructor for the client.
-- **`apiKey: string`** - Your Cerberius API Key.
-- **`apiSecret: string`** - Your Cerberius API Secret.
+-   **`apiKey: string`** - Your Cerberius API Key.
+-   **`apiSecret: string`** - Your Cerberius API Secret.
 
 ### `async emailLookup(emails: string[]): Promise<any>`
-- **`emails: string[]`** - An array of email strings to look up.
-- **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(The `any` type should be replaced with a more specific type definition once the actual API response structure is known.)*
+-   **`emails: string[]`** - An array of email strings to look up.
+-   **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(Consult API documentation for the specific response structure.)*
 
 ### `async ipLookup(ips: string[]): Promise<any>`
-- **`ips: string[]`** - An array of IP address strings to look up.
-- **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(Replace `any` with a specific type definition based on the API response.)*
+-   **`ips: string[]`** - An array of IP address strings to look up.
+-   **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(Consult API documentation for the specific response structure.)*
 
 ### `async promptCheck(prompt: string): Promise<any>`
-- **`prompt: string`** - The text prompt to check.
-- **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(Replace `any` with a specific type definition based on the API response.)*
+-   **`prompt: string`** - The text prompt to check.
+-   **Returns**: `Promise<any>` - A promise that resolves with the API response data. *(Consult API documentation for the specific response structure.)*
 
 ## Error Handling
 
-The client uses `axios` for HTTP requests. If an API request fails, `axios` will typically throw an error.
-- For API errors (e.g., HTTP 4xx or 5xx status codes), the error object will often be an `AxiosError` which includes a `response` property containing details like `error.response.status` and `error.response.data`. The `CerberiusClient` catches these errors and re-throws a new `Error` with a message like: `API Error: <status_code> <response_data_message_or_object>`.
-- For network issues or other errors not directly from the API response, a standard `Error` object might be thrown by `axios` or other parts of the code.
+The client uses `axios` for HTTP requests. If an API request fails, an error will be thrown.
+- The `CerberiusClient` catches `AxiosError` instances and re-throws a new `Error` with a message formatted as: `API Error: <status_code> <response_data_object_or_message>`.
+- For network issues or other errors not directly from an API response, a standard `Error` might be thrown.
 
 It's crucial to wrap API calls in `try...catch` blocks to handle potential errors gracefully:
 
-```typescript
+```javascript
 try {
     const results = await client.emailLookup(['nonexistent@example.com']);
     // Process results
+    console.log(results);
 } catch (error) {
     console.error('Operation failed:', error.message);
-    // You can inspect the error further if needed,
-    // though the client attempts to provide a clear message.
-    // if (error.response) { /* Axios-specific error details */ }
+    // The client formats the error message.
+    // If you need to access raw Axios error details (though less common now):
+    // if (error.originalError && error.originalError.isAxiosError && error.originalError.response) {
+    //   console.error('Raw API Error Details:', error.originalError.response.data);
+    // }
 }
 ```
 
@@ -141,4 +175,4 @@ Currently, this project is not accepting external contributions. Please check ba
 
 ## License
 
-This client library is provisionally licensed under the MIT License. A formal `LICENSE` file will be added to the repository.
+This client library is licensed under the MIT License. See the `LICENSE` file in the repository for the full license text.
