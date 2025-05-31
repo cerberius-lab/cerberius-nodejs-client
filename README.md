@@ -1,4 +1,4 @@
-[![Node.js CI](https://github.com/cerberius-soft/nodejs/actions/workflows/ci.yml/badge.svg)](https://github.com/cerberius-soft/nodejs/actions/workflows/ci.yml)
+[![Node.js CI](https://github.com/cerberius-lab/cerberius-nodejs-client/actions/workflows/ci.yml/badge.svg)](https://github.com/cerberius-lab/cerberius-nodejs-client/actions/workflows/ci.yml)
 
 # Cerberius API Client for Node.js
 
@@ -33,8 +33,7 @@ npm install cerberius-client
 
 To use the Cerberius API Client, you need an API Key and an API Secret. These credentials are used to authenticate your requests to the Cerberius API.
 
-You can obtain your API Key and API Secret from your Cerberius account dashboard. For more details on managing your API credentials, please refer to the official Cerberius API documentation.
-**(TODO: Replace this with the actual URL to your API documentation, e.g., `https://service.cerberius.com/api/docs/`)**
+You can obtain your API Key and API Secret from your Cerberius account dashboard. For more details on managing your API credentials, please refer to the official Cerberius API [documentation](https://service.cerberius.com/api/docs/`).
 
 ### Initializing the Client
 
