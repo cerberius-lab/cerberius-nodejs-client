@@ -1,6 +1,6 @@
 {
   "name": "cerberius-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node.js client for the Cerberius API.",
   "main": "dist/CerberiusClient.js",
   "types": "dist/CerberiusClient.d.ts",
@@ -13,7 +13,12 @@
     "type": "git",
     "url": "git+https://github.com/cerberius-lab/cerberius-nodejs-client.git"
   },
-  "keywords": ["cerberius", "api", "client", "security"],
+  "keywords": [
+    "cerberius",
+    "api",
+    "client",
+    "security"
+  ],
   "author": "Cerberius Pty Ltd",
   "license": "MIT",
   "bugs": {
